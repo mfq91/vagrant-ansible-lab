@@ -1,48 +1,44 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-Vagrant.configure("2") do |config|
-  
+# VARIABLES
+ANSIBLE_MANAGED_NODES = 2 
+IP_NW = "192.168.10."
+NODE_IP_START = 3
+DEFAULT_BOX = "ubuntu/jammy64"
+ANSIBLE_MASTER_MEMORY = 4096
+ANSIBLE_MASTER_CPUS = 2
+ANSIBLE_MANAGED_NODES_MEMORY = 4096
+ANSIBLE_MANAGED_NODES_CPUS = 2
+# ANSIBLE MASTER NODE
+Vagrant.configure("2") do |config|  
   config.vm.provider "virtualbox" do |rs|
-    rs.memory = 2048
-    rs.cpus = 2
+    rs.memory = ANSIBLE_MASTER_MEMORY
+    rs.cpus = ANSIBLE_MASTER_CPUS
   end
-
-  # Will not check for box updates during every startup.
   config.vm.box_check_update = false
-
-  # Master node where ansible will be installed
   config.vm.define "ansible_master" do |ansible_master|
-    ansible_master.vm.box = "ubuntu/jammy64"
-    ansible_master.vm.hostname = "controller.anslab.com"
+    ansible_master.vm.box = "#{DEFAULT_BOX}"
+    ansible_master.vm.hostname = "ansible-master.mfq.com"
     ansible_master.vm.provider "virtualbox" do |vb|
-      vb.name = "ansible-master"  # Nombre de la máquina en VirtualBox
+      vb.name = "ansible-master"
     end
     ansible_master.vm.network "private_network", ip: "192.168.10.3"
     ansible_master.vm.provision "shell", path: "bootstrap.sh"
     ansible_master.vm.provision "file", source: "key_gen.sh", destination: "/home/vagrant/"
   end
-
-  # Managed node 1.
-  config.vm.define "ansible_node1" do |ansible_node1|
-    ansible_node1.vm.box = "ubuntu/jammy64"
-    ansible_node1.vm.hostname = "managed1.anslab.com"
-    ansible_node1.vm.provider "virtualbox" do |vb|
-      vb.name = "ansible-node1"  # Nombre de la máquina en VirtualBox
+# ANSIBLE MANAGED NODES
+  (1..ANSIBLE_MANAGED_NODES).each do |i|
+    config.vm.define "ansible_node#{i}" do |node|
+        node.vm.provider "virtualbox" do |vb|
+            vb.name = "ansible-node#{i}"
+            vb.memory = ANSIBLE_MANAGED_NODES_MEMORY
+            vb.cpus = ANSIBLE_MANAGED_NODES_CPUS
+        end
+        node.vm.box = "#{DEFAULT_BOX}"
+        node.vm.hostname = "ansible-node#{i}.mfq.com"
+        node.vm.network "private_network", ip: IP_NW + "#{NODE_IP_START + i}"
+        node.vm.provision "shell", path: "bootstrap.sh"
     end
-    ansible_node1.vm.network "private_network", ip: "192.168.10.4"
-    ansible_node1.vm.provision "shell", path: "bootstrap.sh"
   end
-
-  # Managed node 2.
-  config.vm.define "ansible_node2" do |ansible_node2|
-    ansible_node2.vm.box = "ubuntu/jammy64"
-    ansible_node2.vm.hostname = "managed2.anslab.com"
-    ansible_node2.vm.provider "virtualbox" do |vb|
-      vb.name = "ansible-node2"  # Nombre de la máquina en VirtualBox
-    end
-    ansible_node2.vm.network "private_network", ip: "192.168.10.5"
-    ansible_node2.vm.provision "shell", path: "bootstrap.sh"
-  end
-
 end
