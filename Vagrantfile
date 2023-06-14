@@ -10,7 +10,7 @@ ANSIBLE_MASTER_MEMORY = 4096
 ANSIBLE_MASTER_CPUS = 2
 ANSIBLE_MANAGED_NODES_MEMORY = 4096
 ANSIBLE_MANAGED_NODES_CPUS = 2
-# ANSIBLE MASTER NODE
+# ANSIBLE MASTER NODE *
 Vagrant.configure("2") do |config|  
   config.vm.provider "virtualbox" do |rs|
     rs.memory = ANSIBLE_MASTER_MEMORY
@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
     ansible_master.vm.provision "shell", path: "bootstrap.sh"
     ansible_master.vm.provision "file", source: "key_gen.sh", destination: "/home/vagrant/"
   end
-# ANSIBLE MANAGED NODES
+# ANSIBLE MANAGED NODES **
   (1..ANSIBLE_MANAGED_NODES).each do |i|
     config.vm.define "ansible_node#{i}" do |node|
         node.vm.provider "virtualbox" do |vb|
